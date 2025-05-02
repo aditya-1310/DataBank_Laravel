@@ -10,33 +10,45 @@ class MarketData extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'date',
-        'symbol',
-        'open',
-        'high',
-        'low',
-        'close',
-        'volume',
-        'is_approved',
-    ];
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'market_data';
 
-    protected $casts = [
-        'date' => 'date',
-        'open' => 'decimal:2',
-        'high' => 'decimal:2',
-        'low' => 'decimal:2',
-        'close' => 'decimal:2',
-        'volume' => 'integer',
-        'is_approved' => 'boolean',
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'date',
+        'market_name',
+        'product_name',
+        'price',
+        'quantity',
+        'source',
+        'status',
+        'submitted_by',
     ];
 
     /**
-     * Get the user who submitted the market data.
+     * The attributes that should be cast.
+     *
+     * @var array
      */
-    public function user(): BelongsTo
+    protected $casts = [
+        'date' => 'date',
+        'price' => 'float',
+        'quantity' => 'float',
+    ];
+
+    /**
+     * Get the user that submitted this data.
+     */
+    public function submitter(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'submitted_by');
     }
 } 
