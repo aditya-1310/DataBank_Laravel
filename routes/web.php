@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MarketDataController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MarketDataControllerNew;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,10 +24,11 @@ Route::get('/', function () {
 
 // Public routes
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth'])->name('dashboard');
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // Market data public routes
-Route::get('/market-data', [MarketDataController::class, 'index'])
+Route::get('/market-data', [MarketDataControllerNew::class, 'index'])
     ->name('market-data.index');
 
 // Authenticated user routes
@@ -37,18 +39,18 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Market data authenticated routes with specific paths first
-    Route::get('/market-data/create', [MarketDataController::class, 'create'])
+    Route::get('/market-data/create', [MarketDataControllerNew::class, 'create'])
         ->name('market-data.create');
     Route::get('/market-data/export', [MarketDataController::class, 'export'])
         ->middleware('throttle:10,1')
         ->name('market-data.export');
     Route::get('/market-data/export/{format}', [MarketDataController::class, 'exportFormat'])
         ->name('market-data.export.format');
-    Route::get('/market-data/import', [MarketDataController::class, 'importForm'])
+    Route::get('/market-data/import', [MarketDataControllerNew::class, 'importForm'])
         ->name('market-data.import');
-    Route::post('/market-data/import', [MarketDataController::class, 'importStore'])
+    Route::post('/market-data/import', [MarketDataControllerNew::class, 'import'])
         ->middleware('throttle:5,1')
-        ->name('market-data.import.store');
+        ->name('market-data.import.process');
     
     // Template download routes - put before parameter routes
     Route::get('/market-data/template/csv', [MarketDataController::class, 'downloadCsvTemplate'])
@@ -57,17 +59,17 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
         ->name('market-data.template.excel');
     
     // Market data routes with parameters
-    Route::get('/market-data/{id}', [MarketDataController::class, 'show'])
+    Route::get('/market-data/{marketData}', [MarketDataControllerNew::class, 'show'])
         ->name('market-data.show');
-    Route::get('/market-data/{id}/edit', [MarketDataController::class, 'edit'])
+    Route::get('/market-data/{marketData}/edit', [MarketDataControllerNew::class, 'edit'])
         ->name('market-data.edit');
-    Route::put('/market-data/{id}', [MarketDataController::class, 'update'])
+    Route::put('/market-data/{marketData}', [MarketDataControllerNew::class, 'update'])
         ->name('market-data.update');
-    Route::delete('/market-data/{id}', [MarketDataController::class, 'destroy'])
+    Route::delete('/market-data/{marketData}', [MarketDataControllerNew::class, 'destroy'])
         ->name('market-data.destroy');
-    Route::post('/market-data/{id}/share', [MarketDataController::class, 'share'])
+    Route::post('/market-data/{marketData}/share', [MarketDataController::class, 'share'])
         ->name('market-data.share');
-    Route::post('/market-data', [MarketDataController::class, 'store'])
+    Route::post('/market-data', [MarketDataControllerNew::class, 'store'])
         ->name('market-data.store');
     
     // Shared route

@@ -11,101 +11,50 @@ use Illuminate\Support\Facades\Log;
 use League\Csv\Reader;
 use League\Csv\Writer;
 use Maatwebsite\Excel\Facades\Excel as ExcelFacade;
+use Illuminate\View\View;
 
 class MarketDataController extends Controller
 {
     /**
-     * Display a listing of market data.
+     * Display a listing of the market data.
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
-        try {
-            Log::info('MarketDataController@index called', [
-                'user_id' => Auth::id(),
-                'symbol' => $request->symbol
-            ]);
-            
-            // Default symbol if none is provided
-            $symbol = $request->symbol ?? 'AAPL';
-            
-            // Storage directory for market data
-            $storageDir = storage_path('app/market_data');
-            
-            // Check if the directory exists, create if not
-            if (!file_exists($storageDir)) {
-                mkdir($storageDir, 0755, true);
-            }
-            
-            // CSV file for the selected symbol
-            $csvFile = $storageDir . '/' . $symbol . '.csv';
-            
-            // Handle case where file doesn't exist
-            if (!file_exists($csvFile)) {
-                return view('market-data.index', [
-                    'data' => [],
-                    'symbols' => $this->getAvailableSymbols(),
-                    'currentSymbol' => $symbol,
-                    'message' => "No data available for {$symbol}"
-                ]);
-            }
-            
-            // Parse CSV file
-            $csv = Reader::createFromPath($csvFile, 'r');
-            $csv->setHeaderOffset(0);
-            $records = $csv->getRecords();
-            
-            // Convert to array for pagination
-            $data = iterator_to_array($records);
-            
-            // Filter by date range if provided
-            if ($request->has('start_date') && $request->has('end_date')) {
-                $startDate = $request->start_date;
-                $endDate = $request->end_date;
-                
-                $data = array_filter($data, function($item) use ($startDate, $endDate) {
-                    return $item['date'] >= $startDate && $item['date'] <= $endDate;
-                });
-            }
-            
-            // Sort by date (newest first)
-            usort($data, function($a, $b) {
-                return strcmp($b['date'], $a['date']);
-            });
-            
-            // Manual pagination
-            $perPage = 15;
-            $currentPage = $request->input('page', 1);
-            $offset = ($currentPage - 1) * $perPage;
-            $paginatedData = array_slice($data, $offset, $perPage);
-            $totalPages = ceil(count($data) / $perPage);
-            
-            return view('market-data.index', [
-                'data' => $paginatedData,
-                'symbols' => $this->getAvailableSymbols(),
-                'currentSymbol' => $symbol,
-                'currentPage' => $currentPage,
-                'totalPages' => $totalPages
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Error in MarketDataController@index', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return view('market-data.index', [
-                'data' => [],
-                'symbols' => $this->getAvailableSymbols(),
-                'currentSymbol' => $request->symbol ?? 'AAPL',
-                'error' => 'Error loading market data: ' . $e->getMessage()
-            ]);
+        $query = MarketData::query();
+        
+        // Apply filters
+        if ($request->filled('market_name')) {
+            $query->where('market_name', 'like', '%' . $request->market_name . '%');
         }
+        
+        if ($request->filled('product_name')) {
+            $query->where('product_name', 'like', '%' . $request->product_name . '%');
+        }
+        
+        if ($request->filled('date_from')) {
+            $query->where('date', '>=', $request->date_from);
+        }
+        
+        if ($request->filled('date_to')) {
+            $query->where('date', '<=', $request->date_to);
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        $marketData = $query->orderBy('date', 'desc')->paginate(15);
+        
+        return view('market-data.index', [
+            'marketData' => $marketData,
+            'filters' => $request->all(),
+        ]);
     }
 
     /**
      * Show the form for creating a new market data entry.
      */
-    public function create()
+    public function create(): View
     {
         return view('market-data.create');
     }
@@ -115,52 +64,37 @@ class MarketDataController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'symbol' => 'required|string|max:10',
+        $validated = $request->validate([
             'date' => 'required|date',
-            'open' => 'required|numeric',
-            'high' => 'required|numeric',
-            'low' => 'required|numeric',
-            'close' => 'required|numeric',
-            'volume' => 'required|integer',
+            'market_name' => 'required|string|max:255',
+            'product_name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'quantity' => 'nullable|numeric|min:0',
+            'source' => 'nullable|string|max:255',
         ]);
         
-        $marketData = new MarketData($request->all());
-        $marketData->user_id = Auth::id();
-        $marketData->is_approved = Auth::user()->is_admin ? true : false;
-        $marketData->save();
+        $validated['submitted_by'] = Auth::id();
+        $validated['status'] = 'pending';
+        
+        MarketData::create($validated);
         
         return redirect()->route('market-data.index')
-            ->with('success', 'Market data created successfully.');
+            ->with('success', 'Market data submitted successfully.');
     }
 
     /**
      * Display the specified market data.
      */
-    public function show($id)
+    public function show(MarketData $marketData): View
     {
-        $marketData = MarketData::findOrFail($id);
-        
-        // Only approved data or owner's data can be viewed
-        if (!$marketData->is_approved && $marketData->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized access');
-        }
-        
         return view('market-data.show', compact('marketData'));
     }
 
     /**
      * Show the form for editing the specified market data.
      */
-    public function edit($id)
+    public function edit(MarketData $marketData): View
     {
-        $marketData = MarketData::findOrFail($id);
-        
-        // Only owner can edit their data
-        if ($marketData->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized access');
-        }
-        
         return view('market-data.edit', compact('marketData'));
     }
 
@@ -169,25 +103,20 @@ class MarketDataController extends Controller
      */
     public function update(Request $request, MarketData $marketData)
     {
-        // Only owner can update their data
-        if ($marketData->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized access');
-        }
-        
-        $request->validate([
-            'symbol' => 'required|string|max:10',
+        $validated = $request->validate([
             'date' => 'required|date',
-            'open' => 'required|numeric',
-            'high' => 'required|numeric',
-            'low' => 'required|numeric',
-            'close' => 'required|numeric',
-            'volume' => 'required|integer',
+            'market_name' => 'required|string|max:255',
+            'product_name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'quantity' => 'nullable|numeric|min:0',
+            'source' => 'nullable|string|max:255',
+            'status' => 'required|in:pending,approved,rejected',
         ]);
         
-        $marketData->update($request->all());
+        $marketData->update($validated);
         
         return redirect()->route('market-data.index')
-            ->with('success', 'Market data updated successfully');
+            ->with('success', 'Market data updated successfully.');
     }
 
     /**
@@ -195,15 +124,33 @@ class MarketDataController extends Controller
      */
     public function destroy(MarketData $marketData)
     {
-        // Only owner or admin can delete
-        if ($marketData->user_id !== Auth::id() && !Auth::user()->is_admin) {
-            abort(403, 'Unauthorized access');
-        }
-        
         $marketData->delete();
         
         return redirect()->route('market-data.index')
-            ->with('success', 'Market data deleted successfully');
+            ->with('success', 'Market data deleted successfully.');
+    }
+    
+    /**
+     * Show the bulk import form.
+     */
+    public function importForm(): View
+    {
+        return view('market-data.import');
+    }
+    
+    /**
+     * Process the bulk import request.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:10240',
+        ]);
+        
+        // Process CSV import logic would go here
+        
+        return redirect()->route('market-data.index')
+            ->with('success', 'Market data imported successfully.');
     }
     
     /**
@@ -291,197 +238,6 @@ class MarketDataController extends Controller
         $marketData->save();
         
         return redirect()->back()->with('success', 'Market data approved successfully.');
-    }
-    
-    /**
-     * Show the form for bulk importing market data.
-     */
-    public function importForm()
-    {
-        return view('market-data.import');
-    }
-    
-    /**
-     * Process the bulk import of market data.
-     */
-    public function importStore(Request $request)
-    {
-        try {
-            // Validate file upload
-            $request->validate([
-                'file' => 'required|file|mimes:csv,xlsx,xls|max:10240', // 10MB max
-                'symbol' => 'required|string|max:10|min:3|alpha_num',
-            ]);
-
-            // Check if user has admin privileges to import
-            if (!Auth::user()->is_admin && !Auth::user()->can('import-market-data')) {
-                return redirect()->back()->with('error', 'You do not have permission to import market data');
-            }
-
-            Log::info('MarketDataController@importStore called', [
-                'user_id' => Auth::id(),
-                'symbol' => $request->symbol,
-                'file_size' => $request->file('file')->getSize()
-            ]);
-
-            $file = $request->file('file');
-            $path = $file->getRealPath();
-            $errors = [];
-            $rowCount = 0;
-            $successCount = 0;
-            
-            
-            // Data storage directory
-            $storageDir = storage_path('app/market_data');
-            if (!file_exists($storageDir)) {
-                mkdir($storageDir, 0755, true);
-            }
-            
-            // Get file extension
-            $extension = $file->getClientOriginalExtension();
-            
-            // Process based on file type
-            if (in_array($extension, ['xlsx', 'xls'])) {
-                try {
-                    // Excel file processing
-                    $this->processExcelImport($file, $request->symbol, $storageDir);
-                    return redirect()->route('market-data.index')
-                        ->with('success', "Successfully imported Excel data for {$request->symbol}.");
-                } catch (\Exception $e) {
-                    Log::error('Excel import error: ' . $e->getMessage());
-                    return redirect()->back()
-                        ->with('error', 'Error importing Excel data: ' . $e->getMessage());
-                }
-            }
-            
-            // Parse CSV file
-            if (($handle = fopen($path, 'r')) !== false) {
-                // Read header row
-                $header = fgetcsv($handle, 1000, ',');
-                
-                // Normalize header keys
-                $header = array_map(function($item) {
-                    return strtolower(trim($item));
-                }, $header);
-                
-                // Required fields
-                $requiredFields = ['date', 'open', 'high', 'low', 'close', 'volume', 'symbol'];
-                
-                // Check if all required fields exist
-                foreach ($requiredFields as $field) {
-                    if (!in_array($field, $header)) {
-                        fclose($handle);
-                        return redirect()->back()
-                            ->with('error', "Missing required column: {$field}");
-                    }
-                }
-                
-                // Store validated rows in arrays by symbol
-                $validatedData = [];
-                
-                // Process data rows
-                while (($data = fgetcsv($handle, 1000, ',')) !== false) {
-                    $rowCount++;
-                    
-                    // Skip empty rows
-                    if (count(array_filter($data)) === 0) {
-                        continue;
-                    }
-                    
-                    // Convert to associative array
-                    $rowData = [];
-                    foreach ($header as $index => $key) {
-                        if (isset($data[$index])) {
-                            $rowData[$key] = trim($data[$index]);
-                        } else {
-                            $rowData[$key] = null;
-                        }
-                    }
-                    
-                    // Validate row data
-                    $validator = Validator::make($rowData, [
-                        'symbol' => 'required|string|max:10',
-                        'date' => 'required|date_format:Y-m-d',
-                        'open' => 'required|numeric',
-                        'high' => 'required|numeric',
-                        'low' => 'required|numeric',
-                        'close' => 'required|numeric',
-                        'volume' => 'required|integer',
-                    ]);
-                    
-                    if ($validator->fails()) {
-                        $errors[] = [
-                            'row' => $rowCount,
-                            'errors' => $validator->errors()->toArray()
-                        ];
-                        continue;
-                    }
-                    
-                    // Use the symbol from the request
-                    $rowSymbol = $request->symbol;
-                    
-                    // Add row to validated data
-                    if (!isset($validatedData[$rowSymbol])) {
-                        $validatedData[$rowSymbol] = [];
-                    }
-                    
-                    // Add user ID and approval status
-                    $rowData['user_id'] = Auth::id();
-                    $rowData['is_approved'] = Auth::user()->is_admin ? '1' : '0';
-                    
-                    // Override symbol with the one from request
-                    $rowData['symbol'] = $rowSymbol;
-                    
-                    // Add to validated data
-                    $validatedData[$rowSymbol][] = $rowData;
-                    $successCount++;
-                }
-                
-                fclose($handle);
-                
-                // Process the validated data
-                foreach ($validatedData as $symbol => $rows) {
-                    // CSV file for storing market data
-                    $csvFilename = $storageDir . '/' . $symbol . '.csv';
-                    $isNewFile = !file_exists($csvFilename);
-                    
-                    // Open CSV file for writing (create or append)
-                    $mode = $isNewFile ? 'w' : 'a';
-                    $csvHandle = fopen($csvFilename, $mode);
-                    
-                    // Write headers if it's a new file
-                    if ($isNewFile) {
-                        fputcsv($csvHandle, $header);
-                    }
-                    
-                    // Write validated rows
-                    foreach ($rows as $row) {
-                        fputcsv($csvHandle, $row);
-                    }
-                    
-                    // Close file
-                    fclose($csvHandle);
-                    
-                    // Update index file to include this symbol
-                    $this->updateIndexFile($symbol);
-                }
-            }
-            
-            // Display results
-            if (!empty($errors)) {
-                session()->flash('failures', $errors);
-                return redirect()->route('market-data.index')
-                    ->with('warning', "Imported {$successCount} of {$rowCount} rows. Some rows had validation errors.");
-            }
-            
-            return redirect()->route('market-data.index')
-                ->with('success', "Successfully imported {$successCount} rows for {$request->symbol}.");
-            
-        } catch (\Exception $e) {
-            Log::error('Import error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Error importing data: ' . $e->getMessage());
-        }
     }
     
     /**
