@@ -15,6 +15,12 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-white">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    
+                    @if(auth()->user()->is_admin)
+                    <x-nav-link :href="route('market-data.pending')" :active="request()->routeIs('market-data.pending')" class="text-yellow-400">
+                        {{ __('Pending Approvals') }}
+                    </x-nav-link>
+                    @endif
                 </div>
             </div>
             
@@ -40,6 +46,15 @@
                     </svg>
                     {{ __('Browse Market Data') }}
                 </a>
+                
+                @if(auth()->user()->is_admin)
+                <a href="{{ route('market-data.pending') }}" class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-500 active:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ __('Approve Pending Data') }}
+                </a>
+                @endif
             </div>
 
             <!-- Settings Dropdown -->
@@ -110,6 +125,12 @@
             <x-responsive-nav-link :href="route('market-data.index')" class="text-blue-400 hover:bg-gray-700 hover:text-white">
                 {{ __('Browse Market Data') }}
             </x-responsive-nav-link>
+            
+            @if(auth()->user()->is_admin)
+            <x-responsive-nav-link :href="route('market-data.pending')" class="text-yellow-400 hover:bg-gray-700 hover:text-white">
+                {{ __('Approve Pending Data') }}
+            </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

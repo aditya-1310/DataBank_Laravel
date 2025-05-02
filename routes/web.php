@@ -84,6 +84,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::patch('/admin/users/{user}/toggle-admin', [AdminController::class, 'toggleAdmin'])->name('admin.toggle-admin');
     Route::patch('/market-data/{id}/approve', [MarketDataController::class, 'approve'])->name('market-data.approve');
+    
+    // New approval routes using new controller
+    Route::patch('/market-data/{marketData}/approve-status', [MarketDataControllerNew::class, 'approve'])
+        ->name('market-data.approve-status');
+    Route::patch('/market-data/{marketData}/reject-status', [MarketDataControllerNew::class, 'reject'])
+        ->name('market-data.reject-status');
+    Route::get('/market-data/pending', [MarketDataControllerNew::class, 'pendingList'])
+        ->name('market-data.pending');
 });
 
 require __DIR__.'/auth.php';

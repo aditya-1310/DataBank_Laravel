@@ -1,0 +1,4 @@
+date,market_name,product_name,price,quantity,source  
+2024-05-10,Central Market,Apples,2.99,100,Local Farm  
+2024-05-10,East Market,Bananas,1.49,150,Import  
+2024-05-11,West Market,Oranges,3.25,75,Southern Farms 

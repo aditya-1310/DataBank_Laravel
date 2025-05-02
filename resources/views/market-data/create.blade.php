@@ -1,17 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-black leading-tight">
             {{ __('Submit New Market Data') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12 bg-gray-900">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-100">
+                <div class="p-6 text-black">
                     
                     @if ($errors->any())
-                        <div class="mb-4 p-4 bg-red-600 rounded-md">
+                        <div class="mb-4 p-4 bg-red-800 text-black rounded-md">
                             <ul>
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -24,39 +24,39 @@
                         @csrf
                         
                         <div>
-                            <x-input-label for="date" :value="__('Date')" class="text-gray-200"/>
-                            <x-text-input id="date" class="block mt-1 w-full bg-gray-700 text-white border-gray-600" 
-                                type="date" name="date" :value="old('date')" required autofocus />
+                            <x-input-label for="date" :value="__('Date')" class="text-white"/>
+                            <x-text-input id="date" class="block mt-1 w-full bg-gray-700 text-black border-gray-600 placeholder-gray-400" 
+                                type="date" name="date" :value="old('date')" required autofocus placeholder="Select a date" />
                         </div>
                         
                         <div>
-                            <x-input-label for="market_name" :value="__('Market Name')" class="text-gray-200" />
-                            <x-text-input id="market_name" class="block mt-1 w-full bg-gray-700 text-white border-gray-600" 
-                                type="text" name="market_name" :value="old('market_name')" required />
+                            <x-input-label for="market_name" :value="__('Market Name')" class="text-white" />
+                            <x-text-input id="market_name" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                                type="text" name="market_name" :value="old('market_name')" required placeholder="Enter market name" />
                         </div>
                         
                         <div>
-                            <x-input-label for="product_name" :value="__('Product Name')" class="text-gray-200" />
-                            <x-text-input id="product_name" class="block mt-1 w-full bg-gray-700 text-white border-gray-600" 
-                                type="text" name="product_name" :value="old('product_name')" required />
+                            <x-input-label for="product_name" :value="__('Product Name')" class="text-white" />
+                            <x-text-input id="product_name" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                                type="text" name="product_name" :value="old('product_name')" required placeholder="Enter product name" />
                         </div>
                         
                         <div>
-                            <x-input-label for="price" :value="__('Price')" class="text-gray-200" />
-                            <x-text-input id="price" class="block mt-1 w-full bg-gray-700 text-white border-gray-600" 
-                                type="number" name="price" step="0.01" min="0" :value="old('price')" required />
+                            <x-input-label for="price" :value="__('Price')" class="text-white" />
+                            <x-text-input id="price" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                                type="number" name="price" step="0.01" min="0" :value="old('price')" required placeholder="0.00" />
                         </div>
                         
                         <div>
-                            <x-input-label for="quantity" :value="__('Quantity')" class="text-gray-200" />
-                            <x-text-input id="quantity" class="block mt-1 w-full bg-gray-700 text-white border-gray-600" 
-                                type="number" name="quantity" step="0.01" min="0" :value="old('quantity')" />
+                            <x-input-label for="quantity" :value="__('Quantity')" class="text-white" />
+                            <x-text-input id="quantity" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                                type="number" name="quantity" step="0.01" min="0" :value="old('quantity')" placeholder="0.00 (optional)" />
                         </div>
                         
                         <div>
-                            <x-input-label for="source" :value="__('Source')" class="text-gray-200" />
-                            <x-text-input id="source" class="block mt-1 w-full bg-gray-700 text-white border-gray-600" 
-                                type="text" name="source" :value="old('source')" />
+                            <x-input-label for="source" :value="__('Source')" class="text-white" />
+                            <x-text-input id="source" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                                type="text" name="source" :value="old('source')" placeholder="Enter data source (optional)" />
                         </div>
                         
                         <div class="flex items-center justify-end">
@@ -73,4 +73,12 @@
             </div>
         </div>
     </div>
+
+    <style>
+    /* Add custom styles to ensure placeholders are visible */
+    ::placeholder {
+        color: rgba(156, 163, 175, 0.8) !important; /* gray-400 with higher opacity */
+        opacity: 1 !important;
+    }
+    </style>
 </x-app-layout> 
