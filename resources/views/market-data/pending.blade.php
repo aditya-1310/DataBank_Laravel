@@ -159,7 +159,7 @@
                         </div>
                         
                         <div class="mt-4">
-                            {{ $pendingData->links() }}
+                            {{ $pendingData->appends(request()->query())->links() }}
                         </div>
                     @else
                         <div class="text-center py-4">
