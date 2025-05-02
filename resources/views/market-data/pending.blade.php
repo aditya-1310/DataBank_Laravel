@@ -96,7 +96,7 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                                             {{ __('Submitted By') }}
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-1/5">
                                             {{ __('Actions') }}
                                         </th>
                                     </tr>
@@ -125,12 +125,12 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
                                                 {{ $data->submitter->name ?? 'Unknown' }}
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div class="flex justify-end space-x-2">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex justify-end space-x-3">
                                                     <form action="{{ route('market-data.approve-status', $data) }}" method="POST" class="inline">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <button type="submit" class="text-green-400 hover:text-green-300">
+                                                        <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-500 transition-colors duration-150">
                                                             {{ __('Approve') }}
                                                         </button>
                                                     </form>
@@ -138,13 +138,17 @@
                                                     <form action="{{ route('market-data.reject-status', $data) }}" method="POST" class="inline">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <button type="submit" class="text-red-400 hover:text-red-300">
+                                                        <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-500 transition-colors duration-150">
                                                             {{ __('Reject') }}
                                                         </button>
                                                     </form>
                                                     
-                                                    <a href="{{ route('market-data.show', $data) }}" class="text-blue-400 hover:text-blue-300">
+                                                    <a href="{{ route('market-data.show', $data) }}" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors duration-150">
                                                         {{ __('View') }}
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('market-data.edit', $data) }}" class="px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-500 transition-colors duration-150">
+                                                        {{ __('Edit') }}
                                                     </a>
                                                 </div>
                                             </td>

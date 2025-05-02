@@ -184,7 +184,7 @@
 
                     <!-- Pagination -->
                     <div class="mt-8">
-                        {{ $marketData->links() }}
+                        {{ $marketData->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>

@@ -31,31 +31,31 @@
                         
                         <div>
                             <x-input-label for="market_name" :value="__('Market Name')" class="text-white" />
-                            <x-text-input id="market_name" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                            <x-text-input id="market_name" class="block mt-1 w-full bg-gray-700 text-black border-gray-600 placeholder-gray-400" 
                                 type="text" name="market_name" :value="old('market_name')" required placeholder="Enter market name" />
                         </div>
                         
                         <div>
                             <x-input-label for="product_name" :value="__('Product Name')" class="text-white" />
-                            <x-text-input id="product_name" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                            <x-text-input id="product_name" class="block mt-1 w-full bg-gray-700 text-black border-gray-600 placeholder-gray-400" 
                                 type="text" name="product_name" :value="old('product_name')" required placeholder="Enter product name" />
                         </div>
                         
                         <div>
                             <x-input-label for="price" :value="__('Price')" class="text-white" />
-                            <x-text-input id="price" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                            <x-text-input id="price" class="block mt-1 w-full  text-black border-gray-600 placeholder-gray-400" 
                                 type="number" name="price" step="0.01" min="0" :value="old('price')" required placeholder="0.00" />
                         </div>
                         
                         <div>
                             <x-input-label for="quantity" :value="__('Quantity')" class="text-white" />
-                            <x-text-input id="quantity" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                            <x-text-input id="quantity" class="block mt-1 w-full bg-gray-700 text-black border-gray-600 placeholder-gray-400" 
                                 type="number" name="quantity" step="0.01" min="0" :value="old('quantity')" placeholder="0.00 (optional)" />
                         </div>
                         
                         <div>
                             <x-input-label for="source" :value="__('Source')" class="text-white" />
-                            <x-text-input id="source" class="block mt-1 w-full bg-gray-700 text-white border-gray-600 placeholder-gray-400" 
+                            <x-text-input id="source" class="block mt-1 w-full bg-gray-700 text-black border-gray-600 placeholder-gray-400" 
                                 type="text" name="source" :value="old('source')" placeholder="Enter data source (optional)" />
                         </div>
                         

@@ -58,6 +58,11 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::get('/market-data/template/excel', [MarketDataController::class, 'downloadExcelTemplate'])
         ->name('market-data.template.excel');
     
+    // Pending approvals route - moved from admin middleware
+    Route::get('/market-data/pending', [MarketDataControllerNew::class, 'pendingList'])
+        ->middleware('admin')  // Still require admin middleware
+        ->name('market-data.pending');
+    
     // Market data routes with parameters
     Route::get('/market-data/{marketData}', [MarketDataControllerNew::class, 'show'])
         ->name('market-data.show');
@@ -90,8 +95,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('market-data.approve-status');
     Route::patch('/market-data/{marketData}/reject-status', [MarketDataControllerNew::class, 'reject'])
         ->name('market-data.reject-status');
-    Route::get('/market-data/pending', [MarketDataControllerNew::class, 'pendingList'])
-        ->name('market-data.pending');
 });
 
 require __DIR__.'/auth.php';

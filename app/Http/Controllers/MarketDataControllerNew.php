@@ -14,30 +14,41 @@ class MarketDataControllerNew extends Controller
      */
     public function index(Request $request): View
     {
+        // Log request parameters
+        \Log::debug('Market Data Index Filter Parameters: ' . json_encode($request->all()));
+        
         $query = MarketData::query();
         
         // Apply filters
         if ($request->filled('market_name')) {
             $query->where('market_name', 'like', '%' . $request->market_name . '%');
+            \Log::debug('Filtering by market_name: ' . $request->market_name);
         }
         
         if ($request->filled('product_name')) {
             $query->where('product_name', 'like', '%' . $request->product_name . '%');
+            \Log::debug('Filtering by product_name: ' . $request->product_name);
         }
         
         if ($request->filled('date_from')) {
             $query->where('date', '>=', $request->date_from);
+            \Log::debug('Filtering by date_from: ' . $request->date_from);
         }
         
         if ($request->filled('date_to')) {
             $query->where('date', '<=', $request->date_to);
+            \Log::debug('Filtering by date_to: ' . $request->date_to);
         }
         
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+            \Log::debug('Filtering by status: ' . $request->status);
         }
         
+        // Log the SQL query
+        \DB::enableQueryLog();
         $marketData = $query->orderBy('date', 'desc')->paginate(15);
+        \Log::debug('SQL Query: ' . json_encode(\DB::getQueryLog()));
         
         return view('market-data.index', [
             'marketData' => $marketData,
